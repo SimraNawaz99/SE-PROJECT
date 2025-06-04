@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather API</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="card"> 
+    <div class="search">
+      <input type="text" placeholder="Enter city name" spellcheck="false">
+      <button><img src="weather-app-img/images/search.png"></button>
+    </div>
+    <div class="error">
+      <p>Invalid city name</p>
+    </div>
+    <div class="weather">
+      <img src="weather-app-img/images/rain.png" class="weather-icon">
+      <h1 class="temperature">30°C</h1>
+      <h2 class="city">Detecting...</h2>
+      <div class="details">
+        <div class="col">
+          <img src="weather-app-img/images/humidity.png">
+          <div>
+            <p class="humidity">--%</p>
+            <p>Humidity</p>
+          </div>
+        </div>
+        <div class="col">
+          <img src="weather-app-img/images/wind.png">
+          <div>
+            <p class="wind">-- km/h</p>
+            <p>Wind speed</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const apikey = "2a34aa159fcc012b5e9c859b2e0a5faa";
+    const apiUrlCity = "https://api.openweathermap.org/data/2.5/weather?units=metric&q=";
+    const apiUrlCoords = "https://api.openweathermap.org/data/2.5/weather?units=metric";
+
+    const searchBox = document.querySelector(".search input");
+    const searchBtn = document.querySelector(".search button");
+    const weatherIcon = document.querySelector(".weather-icon");
+
+    async function checkWeather(input) {
+      let url;
+      if (typeof input === "string") {
+        url = `${apiUrlCity}${input}&appid=${apikey}`;
+      } else {
+        url = `${apiUrlCoords}&lat=${input.lat}&lon=${input.lon}&appid=${apikey}`;
+      }
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("City not found");
+        const data = await response.json();
+
+        document.querySelector(".city").innerHTML = data.name;
+        document.querySelector(".temperature").innerHTML = Math.round(data.main.temp) + "°C";
+        document.querySelector(".humidity").innerHTML = data.main.humidity + "%";
+        document.querySelector(".wind").innerHTML = data.wind.speed + "km/h";
+
+        const condition = data.weather[0].main;
+        if (condition === "Clouds") weatherIcon.src = "weather-app-img/images/clouds.png";
+        else if (condition === "Clear") weatherIcon.src = "weather-app-img/images/clear.png";
+        else if (condition === "Rain") weatherIcon.src = "weather-app-img/images/rain.png";
+        else if (condition === "Drizzle") weatherIcon.src = "weather-app-img/images/drizzle.png";
+        else if (condition === "Mist") weatherIcon.src = "weather-app-img/images/mist.png";
+        else if (condition === "Snow") weatherIcon.src = "weather-app-img/images/snow.png";
+
+        document.querySelector(".weather").style.display = "block";
+        document.querySelector(".error").style.display = "none";
+      } catch (error) {
+        document.querySelector(".error").style.display = "block";
+        document.querySelector(".weather").style.display = "none";
+      }
+    }
+
+    searchBtn.addEventListener("click", () => {
+      checkWeather(searchBox.value);
+    });
+
+    window.onload = function () {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const coords = {
+              lat: position.coords.latitude,
+              lon: position.coords.longitude,
+            };
+            checkWeather(coords);
+          },
+          (error) => {
+            alert("Location access denied. Please allow location or search manually.");
+          }
+        );
+      } else {
+        alert("Geolocation not supported by your browser.");
+      }
+    };
+  </script>
+</body>
+</html>
+
+
